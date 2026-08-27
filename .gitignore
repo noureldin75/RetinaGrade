@@ -1,0 +1,16 @@
+data/
+*.zip
+*.csv
+
+.ipynb_checkpoints/
+
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+.env
+
+kaggle.json
+
+.DS_Store
+Thumbs.db
