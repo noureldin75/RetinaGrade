@@ -124,8 +124,8 @@ def remove_boundary_effect(path, new_path, scale, test_limit=None):
 
 if __name__ == "__main__":
     remove_boundary_effect(
-        path='/content/drive/MyDrive/train_images/',
-        new_path='/content/drive/MyDrive/processed_images/',
+        path='data/train_images/',
+        new_path='data/processed_train_images/',
         scale=500,
         test_limit=5  # set to None to process the full dataset
     )
