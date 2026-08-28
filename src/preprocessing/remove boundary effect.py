@@ -22,16 +22,16 @@ import time
 
 
 def create_directory(directory):
-    """
-    Creates a new folder in the specified directory if it doesn't already exist.
-
-    INPUT
-        directory: Folder to be created, e.g. "folder/".
-    OUTPUT
-        Creates the folder on disk if missing. No return value.
-    """
     if not os.path.exists(directory):
         os.makedirs(directory)
+    else:
+        for filename in os.listdir(directory):
+            file_path = os.path.join(directory, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                print(f"Cant delete {file_path}: {e}")
 
 
 def scaleRadius(img, scale):
