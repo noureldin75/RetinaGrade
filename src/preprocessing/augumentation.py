@@ -18,7 +18,7 @@ transform = A.Compose([
     A.Resize(300, 300),
     A.HorizontalFlip(p=0.5),
     A.OneOf([
-        A.RandomRotate90(p=0.5),
+        A.RandomRotate90(p=0.5, border_mode=cv2.BORDER_CONSTANT),
         A.Rotate(limit=90, p=0.5, border_mode=cv2.BORDER_CONSTANT),
     ], p=0.7),
     A.RandomBrightnessContrast(p=0.3),
