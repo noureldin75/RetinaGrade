@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from preprocessing.augumentation import apply_transform
+from augumentation import apply_transform
 
 class AugmentedDataset(Dataset):
     def __init__(self, images, labels, final_indices, transform):
