@@ -18,13 +18,14 @@ train_transform = A.Compose([
     # A.Resize(300, 300),
     A.HorizontalFlip(p=0.5),
     A.OneOf([
-        A.RandomRotate90(p=0.5, border_mode=cv2.BORDER_CONSTANT),
+        A.RandomRotate90(p=0.5),
         A.Rotate(limit=90, p=0.5, border_mode=cv2.BORDER_CONSTANT),
     ], p=0.7),
     A.RandomBrightnessContrast(p=0.3),
     A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
     A.ToTensorV2()
 ])
+
 val_transform = A.Compose([
     A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
     A.ToTensorV2()
