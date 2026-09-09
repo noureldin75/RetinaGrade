@@ -14,8 +14,8 @@ def over_sample(y_train,targets={1: 2, 3: 5, 4: 3}):
     return np.concatenate(final_indices)
 
 
-transform = A.Compose([
-    A.Resize(300, 300),
+train_transform = A.Compose([
+    # A.Resize(300, 300),
     A.HorizontalFlip(p=0.5),
     A.OneOf([
         A.RandomRotate90(p=0.5, border_mode=cv2.BORDER_CONSTANT),
@@ -25,8 +25,12 @@ transform = A.Compose([
     A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
     A.ToTensorV2()
 ])
+val_transform = A.Compose([
+    A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+    A.ToTensorV2()
+])
 
-def apply_transform(image):
+def apply_transform(transform, image):
     augmented = transform(image=image)
     return augmented['image']
     

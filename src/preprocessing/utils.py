@@ -20,8 +20,8 @@ def load_data(df, image_dir):
 
     for _, row in df.iterrows():
         image_path = os.path.join(image_dir, row["id_code"] + ".png")
-        image = cv2.resize(np.array(Image.open(image_path)), (224, 224))  # Resize to 224x224
-        # image = np.array(Image.open(image_path))
+        # image = cv2.resize(np.array(Image.open(image_path)), (224, 224))  # Resize to 224x224
+        image = np.array(Image.open(image_path))
         
         x.append(image)
         y.append(row["diagnosis"])

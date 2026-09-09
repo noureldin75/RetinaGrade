@@ -11,7 +11,7 @@ class RetinaPreprocessor:
 
     def __init__(
             self,
-            img_size: int = 224,
+            img_size: int = 300,
             ben_graham_sigma: float = 10,
             clahe_clip: float = 2.0,
             clahe_grid: tuple = (8, 8)
