@@ -4,28 +4,34 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from evalution import evaluate_model
 
-def tune_learning_rates(model, train_loader, val_loader, loss_function, device, lrs=[1e-5, 5e-5, 1e-4, 5e-4, 1e-3], epochs=6):
+
+def tune_learning_rates(model, train_loader, val_loader, loss_function, device, lrs=[1e-5, 5e-5, 1e-4, 5e-4, 1e-3],
+                        epochs=6, weight_decay=1e-4):
     """
-    Tests multiple learning rates, trains a fresh copy of the model for each, 
+    Tests multiple learning rates, trains a fresh copy of the model for each,
     tracks the best Macro F1 score, and plots the results.
+
+    weight_decay is fixed across all trials (default matches the notebook's
+    baseline training) so the LR comparison isn't confounded by a different
+    wd than what you'll actually train with.
     """
     results = {}
 
     for lr in lrs:
         print(f"\n--- Testing Learning Rate: {lr} ---")
-        
+
         # Deepcopy the model so every LR starts from the exact same initial weights
         current_model = copy.deepcopy(model)
         current_model.to(device)
-        
-        optimizer = optim.Adam(current_model.classifier.parameters(), lr=lr, weight_decay=1e-2)
-        
+
+        optimizer = optim.Adam(current_model.classifier.parameters(), lr=lr, weight_decay=weight_decay)
+
         best_f1 = -1.0
-        
+
         for epoch in range(epochs):
             current_model.train()
             running_loss = 0.0
-            
+
             for images, labels in train_loader:
                 images, labels = images.to(device), labels.to(device)
                 optimizer.zero_grad()
@@ -34,7 +40,7 @@ def tune_learning_rates(model, train_loader, val_loader, loss_function, device, 
                 loss.backward()
                 optimizer.step()
                 running_loss += loss.item()
-                
+
             # Validation check per epoch
             val_metrics = evaluate_model(
                 current_model,
@@ -43,17 +49,23 @@ def tune_learning_rates(model, train_loader, val_loader, loss_function, device, 
                 average="macro",
                 plot=False
             )
-            
+
             if val_metrics["f1"] > best_f1:
                 best_f1 = val_metrics["f1"]
-                
+
         results[lr] = best_f1
         print(f"LR {lr} Complete -> Best Macro F1: {best_f1:.4f}")
+
+    best_lr = max(results, key=results.get)
+    print("\n" + "=" * 50)
+    print(f"BEST learning rate overall: {best_lr}")
+    print(f"BEST val macro F1: {results[best_lr]:.4f}")
+    print("=" * 50)
 
     # Plotting the comparison curve
     lrs_list = list(results.keys())
     f1_scores = list(results.values())
-    
+
     plt.figure(figsize=(8, 5))
     plt.plot(lrs_list, f1_scores, marker='o', linestyle='-', color='b', linewidth=2)
     plt.xscale('log')

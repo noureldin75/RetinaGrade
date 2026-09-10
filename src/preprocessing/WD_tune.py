@@ -22,25 +22,24 @@ def tune_weight_decay(
     are optimized (matches your current setup: backbone frozen,
     classifier head trainable).
 
-    Resets the trainable module's weights before every trial, otherwise
-    trial N starts from trial N-1's already-trained weights and the
-    comparison between weight_decay values is meaningless.
+    Trains a fresh deepcopy of `model` for every trial, so the original
+    `model` object passed in is never mutated and every weight_decay
+    value starts from the exact same initial weights.
 
     Returns
     -------
     dict: {weight_decay_value: {"best_val_f1": float, "history": [...]}}
     """
-    trainable_module = getattr(model, trainable_module_name)
-    initial_state = copy.deepcopy(trainable_module.state_dict())
-
     results = {}
 
     for wd in weight_decays:
         print(f"\n=== weight_decay = {wd} (lr fixed at {lr}) ===")
 
-        # reset trainable head to its original init, so each wd trial
-        # starts from the same point
-        trainable_module.load_state_dict(initial_state)
+        # Fresh copy of the whole model for this trial — the original
+        # `model` passed in is never touched.
+        current_model = copy.deepcopy(model)
+        current_model.to(device)
+        trainable_module = getattr(current_model, trainable_module_name)
 
         optimizer = optim.Adam(
             trainable_module.parameters(),
@@ -52,14 +51,14 @@ def tune_weight_decay(
         best_val_f1 = -1.0
 
         for epoch in range(epochs):
-            model.train()
+            current_model.train()
             running_loss = 0.0
 
             for images, labels in train_loader:
                 images, labels = images.to(device), labels.to(device)
 
                 optimizer.zero_grad()
-                outputs = model(images)
+                outputs = current_model(images)
                 loss = loss_function(outputs, labels)
                 loss.backward()
                 optimizer.step()
@@ -69,7 +68,7 @@ def tune_weight_decay(
             avg_train_loss = running_loss / len(train_loader)
 
             val_metrics = evaluate_model(
-                model, val_loader, device, average="macro", plot=False
+                current_model, val_loader, device, average="macro", plot=False
             )
 
             print(
@@ -93,7 +92,9 @@ def tune_weight_decay(
         print(f"  -> best val macro F1 for wd={wd}: {best_val_f1:.4f}")
 
     best_wd = max(results, key=lambda k: results[k]["best_val_f1"])
-    print(f"\nBest weight_decay overall: {best_wd} "
-          f"(val macro F1: {results[best_wd]['best_val_f1']:.4f})")
+    print("\n" + "=" * 50)
+    print(f"BEST weight_decay overall: {best_wd}")
+    print(f"BEST val macro F1: {results[best_wd]['best_val_f1']:.4f}")
+    print("=" * 50)
 
     return results
