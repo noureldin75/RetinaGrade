@@ -60,16 +60,18 @@ def compute_metrics(y_true, y_pred, average="macro"):
 
 def print_metrics(y_true, y_pred, average="macro"):
     metrics = compute_metrics(y_true, y_pred, average=average)
+    metrics["qwk"] = compute_qwk(y_true, y_pred)
+
     print(f"Accuracy:  {metrics['accuracy']:.4f}")
     print(f"F1 ({average}):     {metrics['f1']:.4f}")
     print(f"Recall ({average}): {metrics['recall']:.4f}")
     print(f"Precision ({average}): {metrics['precision']:.4f}")
+    print(f"QWK:       {metrics['qwk']:.4f}")
     print("\nPer-class report:")
     print(classification_report(
         y_true, y_pred, target_names=CLASS_NAMES, zero_division=0
     ))
     return metrics
-
 
 def plot_confusion_matrix(y_true, y_pred, normalize=False, title="Confusion Matrix"):
     """
