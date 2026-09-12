@@ -3,18 +3,16 @@ import numpy as np
 from pathlib import Path
 from typing import Union, Dict, Tuple, List, Any
 
+
 class RetinaPreprocessor:
-    """
-    Preprocessing pipeline for fundus images using Ben Graham's method + CLAHE.
-    Includes Dynamic Masking to remove edge ringing artifacts.
-    """
+
 
     def __init__(
             self,
             img_size: int = 300,
             ben_graham_sigma: float = 10,
             clahe_clip: float = 2.0,
-            clahe_grid: tuple = (8, 8)
+            clahe_grid: tuple = (8, 8),
     ):
         self.img_size = img_size
         self.ben_graham_sigma = ben_graham_sigma
@@ -41,11 +39,12 @@ class RetinaPreprocessor:
             return img[rmin:rmax + 1, cmin:cmax + 1]
         return img
 
-    def get_dynamic_mask(self, img: np.ndarray, tol: int = 10) -> np.ndarray:
+    def get_dynamic_mask(self, img: np.ndarray, tol: int = 15) -> np.ndarray:
         gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         _, mask = cv2.threshold(gray, tol, 255, cv2.THRESH_BINARY)
-        kernel = np.ones((5, 5), np.uint8)
+        kernel = np.ones((7, 7), np.uint8)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         mask_3d = np.repeat((mask > 0)[:, :, np.newaxis], 3, axis=2)
         return mask_3d
 
@@ -79,11 +78,12 @@ class RetinaPreprocessor:
 
         if apply_ben_graham:
             img = self.ben_graham_preprocessing(img)
-            img = np.where(fundus_mask, img, 128).astype(np.uint8)
 
         if apply_clahe:
             img = self.apply_clahe(img)
-            img = np.where(fundus_mask, img, 128).astype(np.uint8)
+
+        # الماسك بيتطبق مرة واحدة بس، في الآخر
+        img = np.where(fundus_mask, img, 0).astype(np.uint8)
 
         return img
 
@@ -92,7 +92,7 @@ class RetinaPreprocessor:
             image_path: Union[str, Path],
             apply_ben_graham: bool = True,
             apply_clahe: bool = True,
-            return_tensor: bool = False
+            return_tensor: bool = False,
     ) -> np.ndarray:
         img = cv2.imread(str(image_path))
         if img is None:
@@ -113,7 +113,7 @@ class RetinaPreprocessor:
             img: np.ndarray,
             apply_ben_graham: bool = True,
             apply_clahe: bool = True,
-            return_tensor: bool = False
+            return_tensor: bool = False,
     ) -> np.ndarray:
         if img is None:
             raise ValueError("Input image is None")
@@ -145,11 +145,13 @@ class RetinaPreprocessor:
 
         fundus_mask = self.get_dynamic_mask(img)
 
-        img = self.ben_graham_preprocessing(img)
-        img = np.where(fundus_mask, img, 128).astype(np.uint8)
+        img_bg = self.ben_graham_preprocessing(img)
+        stages['ben_graham_only'] = img_bg.copy()
 
-        img = self.apply_clahe(img)
-        img = np.where(fundus_mask, img, 128).astype(np.uint8)
-        stages['ben_graham_clahe'] = img.copy()
+        img_clahe = self.apply_clahe(img_bg)
+        stages['clahe_only'] = img_clahe.copy()
+
+        final = np.where(fundus_mask, img_clahe, 0).astype(np.uint8)
+        stages['final_masked'] = final.copy()
 
         return stages
