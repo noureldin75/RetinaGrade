@@ -10,7 +10,9 @@ from sklearn.metrics import (
     precision_score,
     confusion_matrix,
     classification_report,
+    cohen_kappa_score,
 )
+
 
 
 CLASS_NAMES = ["No DR", "Mild", "Moderate", "Severe", "Proliferative"]
@@ -148,3 +150,9 @@ def evaluate_model_corn(model, data_loader, device, average="macro", plot=True, 
     if plot:
         plot_confusion_matrix(y_true, y_pred, normalize=True)
     return metrics
+
+
+
+def compute_qwk(y_true, y_pred):
+
+    return cohen_kappa_score(y_true, y_pred, weights='quadratic')
