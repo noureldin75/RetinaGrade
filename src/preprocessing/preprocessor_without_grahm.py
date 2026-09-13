@@ -17,10 +17,7 @@ class RetinaPreprocessor:
         self.clahe_grid = clahe_grid
 
     def crop_circle_and_resize(self, image: np.ndarray) -> np.ndarray:
-        """
-        بتشيل الحواف السودة حوالين الدائرة وتعمل resize للحجم المطلوب.
-        الصورة هنا لسه بصيغة BGR (زي ما بتقرأها cv2.imread).
-        """
+
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY)
 
@@ -68,7 +65,6 @@ class RetinaPreprocessor:
 
         img = self._run_pipeline(img, apply_clahe=apply_clahe)
 
-        # تحويل لـ RGB في الآخر بس (عشان PyTorch/matplotlib بيتوقعوا RGB)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = img.astype(np.float32) / 255.0
 

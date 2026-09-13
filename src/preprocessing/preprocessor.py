@@ -5,10 +5,7 @@ from typing import Union, Dict
 
 
 class RetinaPreprocessor:
-    """
-    Preprocessing pipeline for fundus images using Ben Graham's method + CLAHE.
-    يتضمن Dynamic Masking لمنع الـ ringing artifacts عند حواف الدائرة.
-    """
+
 
     def __init__(
             self,
@@ -43,10 +40,7 @@ class RetinaPreprocessor:
         return img
 
     def get_dynamic_mask(self, img: np.ndarray, tol: int = 15) -> np.ndarray:
-        """
-        بيحدد فين الشبكية الحقيقية وفين الخلفية (سواء سودة أصلية أو ناتجة من padding).
-        هنستخدمه عشان نمنع أي معالجة من "تلويث" منطقة الخلفية.
-        """
+
         gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         _, mask = cv2.threshold(gray, tol, 255, cv2.THRESH_BINARY)
         kernel = np.ones((7, 7), np.uint8)
@@ -56,16 +50,7 @@ class RetinaPreprocessor:
         return mask_3d
 
     def ben_graham_preprocessing(self, img: np.ndarray, fundus_mask: np.ndarray) -> np.ndarray:
-        """
-        نسخة مظبوطة من Ben Graham method.
 
-        المشكلة في النسخة الأصلية: الـ Gaussian blur بيدمج لون الشبكية
-        مع الخلفية السودة عند الحواف، والـ +128 بتحول الخلفية لرمادي.
-
-        الحل: قبل الـ blur، بنملأ منطقة الخلفية بمتوسط لون الشبكية نفسها
-        (مش أسود)، عشان الـ blur ميعملش خلط بين الشبكية ولون مختلف تماماً.
-        وبعد المعالجة، بنرجّع الخلفية لأسود نضيف بالماسك.
-        """
         if fundus_mask[:, :, 0].any():
             mean_color = img[fundus_mask[:, :, 0]].mean(axis=0).astype(np.uint8)
             img_for_blur = img.copy()
@@ -77,7 +62,6 @@ class RetinaPreprocessor:
         blurred = cv2.GaussianBlur(img_for_blur, (0, 0), sigma)
         result = cv2.addWeighted(img, 4, blurred, -4, 128)
 
-        # نرجّع الخلفية لأسود نضيف فوراً، قبل ما تتبعت لأي خطوة تانية
         result = np.where(fundus_mask, result, 0).astype(np.uint8)
         return result
 
@@ -108,8 +92,7 @@ class RetinaPreprocessor:
 
         if apply_clahe:
             img = self.apply_clahe(img)
-            # الماسك بيتطبق تاني بعد CLAHE، لأن CLAHE ممكن يأثر على حواف
-            # الماسك نفسه شوية حتى لو كانت الخلفية أسود نضيف قبلها
+
             img = np.where(fundus_mask, img, 0).astype(np.uint8)
 
         return img
