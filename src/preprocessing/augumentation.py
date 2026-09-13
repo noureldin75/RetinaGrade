@@ -15,7 +15,6 @@ def over_sample(y_train,targets={1: 2,2: 1, 3: 5, 4: 3}):
 
 
 train_transform = A.Compose([
-    # A.Resize(300, 300),
     A.HorizontalFlip(p=0.5),
     A.OneOf([
         A.RandomRotate90(p=0.5),
