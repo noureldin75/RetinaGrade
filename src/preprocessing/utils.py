@@ -43,11 +43,26 @@ def data_split(x, y, val_size=0.15,test_size=0.15, random_state=42):
     Returns:
     tuple: A tuple containing training and validation sets - (x_train, x_val, y_train, y_val).
     """
-    x_temp,x_test,y_temp,y_test=train_test_split(x,y,test_size=test_size,random_state=random_state,shuffle=True,stratify=y)
 
-    relative_val_size = val_size / (1 - test_size)
+    if test_size == 0.0:
+        # Create empty arrays for the test set to keep the return structure intact
+        x_test, y_test = np.array([]), np.array([])
+        
+        # Do a single split directly for train and validation
+        x_train, x_val, y_train, y_val = train_test_split(
+            x, y, 
+            test_size=val_size, 
+            random_state=random_state, 
+            shuffle=True, 
+            stratify=y
+        )
+    else:    
 
-    x_train, x_val, y_train, y_val = train_test_split(x_temp, y_temp,test_size=relative_val_size,random_state=random_state,shuffle=True,stratify=y_temp
-    )
+        x_temp,x_test,y_temp,y_test=train_test_split(x,y,test_size=test_size,random_state=random_state,shuffle=True,stratify=y)
+
+        relative_val_size = val_size / (1 - test_size)
+
+        x_train, x_val, y_train, y_val = train_test_split(x_temp, y_temp,test_size=relative_val_size,random_state=random_state,shuffle=True,stratify=y_temp
+        )
 
     return x_train, x_val, x_test, y_train, y_val, y_test
