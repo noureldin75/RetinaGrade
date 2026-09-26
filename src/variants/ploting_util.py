@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import Counter
 
 def plot_augmented_batch(dataloader, num_images=16):
     """
@@ -42,5 +43,37 @@ def plot_augmented_batch(dataloader, num_images=16):
     for i in range(num_images, len(axes)):
         axes[i].axis('off')
         
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+
+def plot_class_distribution(train_loader, grade_labels):
+    """
+    Extracts labels from a PyTorch DataLoader and plots the class distribution.
+    """
+    over_sampled_dataset = train_loader.dataset
+    all_labels = [int(label) for _, label in over_sampled_dataset]
+    counts_dict = Counter(all_labels)
+    
+    total_images = len(train_loader.dataset)
+    print(f"Total Train images after oversampling: {total_images}")
+
+    sorted_keys = sorted(counts_dict.keys())
+    labels = [grade_labels[k] for k in sorted_keys]
+    counts = [counts_dict[k] for k in sorted_keys]
+    
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.bar(labels, counts, color='brown')
+    ax.set_xlabel('Diagnosis Grade')
+    ax.set_ylabel('Number of Images')
+    ax.set_title('APTOS 2019 (After Oversampling)')
+
+    for bar, count in zip(bars, counts):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 15,
+                str(count), ha='center', fontweight='bold')
+
     plt.tight_layout()
     plt.show()
