@@ -5,7 +5,7 @@ def plot_augmented_batch(dataloader, num_images=16):
     """
     Fetches a single batch from a PyTorch DataLoader and plots the images.
     """
-    # Grab one batch of data (Images and Labels)
+    # Grab one batch of EDA (Images and Labels)
     images, labels = next(iter(dataloader))
     
     # Ensure we don't try to plot more images than exist in the batch

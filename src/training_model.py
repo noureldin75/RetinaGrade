@@ -30,14 +30,14 @@ from torch.utils.data import DataLoader
 # --- Make local modules importable (matches the notebook's sys.path setup) ---
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from src.data.utils  import load_data, data_split
-from src.data.augumentation import over_sample, train_transform, val_transform
-from src.data.augumented_set import AugmentedDataset
+from src.EDA.utils  import load_data, data_split
+from src.EDA.augumentation import over_sample, train_transform, val_transform
+from src.EDA.augumented_set import AugmentedDataset
 from src.eval.evaluation import evaluate_model, plot_training_curve
 
 # CONFIG
-DATA_CSV = "./data/train.csv"
-PROCESSED_IMAGE_DIR = "./data/processed_train_images"
+DATA_CSV = "./EDA/train.csv"
+PROCESSED_IMAGE_DIR = "EDA/processed_train_images"
 IMG_SIZE = 224
 BATCH_SIZE = 32
 EPOCHS = 5
