@@ -30,7 +30,7 @@ from torch.utils.data import DataLoader
 # --- Make local modules importable (matches the notebook's sys.path setup) ---
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from utils import load_data, data_split
+from src.data.utils  import load_data, data_split
 from augumentation import over_sample, train_transform, val_transform
 from augumented_set import AugmentedDataset
 from evalution import evaluate_model, plot_training_curve
