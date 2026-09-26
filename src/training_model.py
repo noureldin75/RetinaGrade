@@ -31,9 +31,9 @@ from torch.utils.data import DataLoader
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.data.utils  import load_data, data_split
-from augumentation import over_sample, train_transform, val_transform
-from augumented_set import AugmentedDataset
-from evalution import evaluate_model, plot_training_curve
+from src.data.augumentation import over_sample, train_transform, val_transform
+from src.data.augumented_set import AugmentedDataset
+from src.eval.evaluation import evaluate_model, plot_training_curve
 
 # CONFIG
 DATA_CSV = "./data/train.csv"
