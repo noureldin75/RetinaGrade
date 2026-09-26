@@ -1,7 +1,6 @@
-import torch
 import torch.nn as nn
 import torchvision.models as models
-from custom_layers import GeM
+from src.models.custom_layers import GeM
 def build_model(model_name="efficientnet_b3", num_classes=5, freeze_features=True):
     model_func = getattr(models, model_name)
     try:

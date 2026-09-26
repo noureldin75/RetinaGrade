@@ -8,7 +8,7 @@ Pipeline:
      (over_sample from augumentation.py) + augmentation transforms that also
      apply ImageNet normalization.
   3. Fine-tune EfficientNet-B3 (frozen backbone, trainable classifier head).
-  4. Train with per-epoch train/val loss tracking, evaluate with evalution.py,
+  4. Train with per-epoch train/val loss tracking, evaluate with evaluation.py,
      and save the best checkpoint by macro F1 on the validation set.
   5. Final evaluation on the held-out test set.
 

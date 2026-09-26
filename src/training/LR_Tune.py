@@ -1,8 +1,7 @@
 import copy
-import torch
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from evalution import evaluate_model
+from src.eval.evaluation import (evaluate_model)
 
 
 def tune_learning_rates(model, train_loader, val_loader, loss_function, device, lrs=[1e-5, 5e-5, 1e-4, 5e-4, 1e-3],

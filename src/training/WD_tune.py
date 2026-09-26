@@ -1,8 +1,7 @@
 import copy
-import torch
 import torch.optim as optim
 
-from evalution import evaluate_model
+from src.eval.evaluation import evaluate_model
 
 
 def tune_weight_decay(
