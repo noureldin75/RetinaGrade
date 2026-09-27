@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from coral_pytorch.dataset import corn_label_from_logits
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -9,7 +10,9 @@ from sklearn.metrics import (
     precision_score,
     confusion_matrix,
     classification_report,
+    cohen_kappa_score,
 )
+
 
 
 CLASS_NAMES = ["No DR", "Mild", "Moderate", "Severe", "Proliferative"]
@@ -57,16 +60,18 @@ def compute_metrics(y_true, y_pred, average="macro"):
 
 def print_metrics(y_true, y_pred, average="macro"):
     metrics = compute_metrics(y_true, y_pred, average=average)
+    metrics["qwk"] = compute_qwk(y_true, y_pred)
+
     print(f"Accuracy:  {metrics['accuracy']:.4f}")
     print(f"F1 ({average}):     {metrics['f1']:.4f}")
     print(f"Recall ({average}): {metrics['recall']:.4f}")
     print(f"Precision ({average}): {metrics['precision']:.4f}")
+    print(f"QWK:       {metrics['qwk']:.4f}")
     print("\nPer-class report:")
     print(classification_report(
         y_true, y_pred, target_names=CLASS_NAMES, zero_division=0
     ))
     return metrics
-
 
 def plot_confusion_matrix(y_true, y_pred, normalize=False, title="Confusion Matrix"):
     """
@@ -116,3 +121,40 @@ def evaluate_model(model, data_loader, device, average="macro", plot=True):
     if plot:
         plot_confusion_matrix(y_true, y_pred, normalize=True)
     return metrics
+
+# Ordinal model
+
+
+def get_predictions_corn(model, data_loader, device, num_classes=5):
+
+    model.eval()
+    all_preds = []
+    all_labels = []
+
+    with torch.no_grad():
+        for images, labels in data_loader:
+            images = images.to(device)
+            logits = model(images)
+            preds = corn_label_from_logits(logits)
+
+            all_preds.append(preds.cpu().numpy())
+            all_labels.append(labels.cpu().numpy())
+
+    all_preds = np.concatenate(all_preds)
+    all_labels = np.concatenate(all_labels)
+    return all_preds, all_labels
+
+
+def evaluate_model_corn(model, data_loader, device, average="macro", plot=True, num_classes=5):
+
+    y_pred, y_true = get_predictions_corn(model, data_loader, device, num_classes=num_classes)
+    metrics = print_metrics(y_true, y_pred, average=average)
+    if plot:
+        plot_confusion_matrix(y_true, y_pred, normalize=True)
+    return metrics
+
+
+
+def compute_qwk(y_true, y_pred):
+
+    return cohen_kappa_score(y_true, y_pred, weights='quadratic')

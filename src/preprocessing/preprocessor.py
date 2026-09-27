@@ -1,20 +1,18 @@
 import cv2
 import numpy as np
 from pathlib import Path
-from typing import Union, Dict, Tuple, List, Any
+from typing import Union, Dict
+
 
 class RetinaPreprocessor:
-    """
-    Preprocessing pipeline for fundus images using Ben Graham's method + CLAHE.
-    Includes Dynamic Masking to remove edge ringing artifacts.
-    """
+
 
     def __init__(
             self,
-            img_size: int = 224,
+            img_size: int = 300,
             ben_graham_sigma: float = 10,
             clahe_clip: float = 2.0,
-            clahe_grid: tuple = (8, 8)
+            clahe_grid: tuple = (8, 8),
     ):
         self.img_size = img_size
         self.ben_graham_sigma = ben_graham_sigma
@@ -41,18 +39,30 @@ class RetinaPreprocessor:
             return img[rmin:rmax + 1, cmin:cmax + 1]
         return img
 
-    def get_dynamic_mask(self, img: np.ndarray, tol: int = 10) -> np.ndarray:
+    def get_dynamic_mask(self, img: np.ndarray, tol: int = 15) -> np.ndarray:
+
         gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         _, mask = cv2.threshold(gray, tol, 255, cv2.THRESH_BINARY)
-        kernel = np.ones((5, 5), np.uint8)
+        kernel = np.ones((7, 7), np.uint8)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         mask_3d = np.repeat((mask > 0)[:, :, np.newaxis], 3, axis=2)
         return mask_3d
 
-    def ben_graham_preprocessing(self, img: np.ndarray) -> np.ndarray:
+    def ben_graham_preprocessing(self, img: np.ndarray, fundus_mask: np.ndarray) -> np.ndarray:
+
+        if fundus_mask[:, :, 0].any():
+            mean_color = img[fundus_mask[:, :, 0]].mean(axis=0).astype(np.uint8)
+            img_for_blur = img.copy()
+            img_for_blur[~fundus_mask[:, :, 0]] = mean_color
+        else:
+            img_for_blur = img
+
         sigma = self.ben_graham_sigma * (img.shape[0] / float(self.img_size))
-        blurred = cv2.GaussianBlur(img, (0, 0), sigma)
+        blurred = cv2.GaussianBlur(img_for_blur, (0, 0), sigma)
         result = cv2.addWeighted(img, 4, blurred, -4, 128)
+
+        result = np.where(fundus_mask, result, 0).astype(np.uint8)
         return result
 
     def apply_clahe(self, img: np.ndarray) -> np.ndarray:
@@ -78,12 +88,12 @@ class RetinaPreprocessor:
         fundus_mask = self.get_dynamic_mask(img)
 
         if apply_ben_graham:
-            img = self.ben_graham_preprocessing(img)
-            img = np.where(fundus_mask, img, 128).astype(np.uint8)
+            img = self.ben_graham_preprocessing(img, fundus_mask=fundus_mask)
 
         if apply_clahe:
             img = self.apply_clahe(img)
-            img = np.where(fundus_mask, img, 128).astype(np.uint8)
+
+            img = np.where(fundus_mask, img, 0).astype(np.uint8)
 
         return img
 
@@ -92,7 +102,7 @@ class RetinaPreprocessor:
             image_path: Union[str, Path],
             apply_ben_graham: bool = True,
             apply_clahe: bool = True,
-            return_tensor: bool = False
+            return_tensor: bool = False,
     ) -> np.ndarray:
         img = cv2.imread(str(image_path))
         if img is None:
@@ -113,13 +123,16 @@ class RetinaPreprocessor:
             img: np.ndarray,
             apply_ben_graham: bool = True,
             apply_clahe: bool = True,
-            return_tensor: bool = False
+            return_tensor: bool = False,
+            is_rgb: bool = True,
     ) -> np.ndarray:
         if img is None:
             raise ValueError("Input image is None")
 
         if len(img.shape) == 2:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        elif not is_rgb:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         img = self._run_pipeline(img, apply_ben_graham, apply_clahe)
 
@@ -139,17 +152,17 @@ class RetinaPreprocessor:
         stages = {}
         stages['original'] = img.copy()
 
-        img = self.crop_image_from_gray(img)
-        img = self.resize_with_aspect_ratio(img)
-        stages['resized'] = img.copy()
+        img_cropped = self.crop_image_from_gray(img)
+        img_resized = self.resize_with_aspect_ratio(img_cropped)
+        stages['resized'] = img_resized.copy()
 
-        fundus_mask = self.get_dynamic_mask(img)
+        fundus_mask = self.get_dynamic_mask(img_resized)
 
-        img = self.ben_graham_preprocessing(img)
-        img = np.where(fundus_mask, img, 128).astype(np.uint8)
+        img_graham = self.ben_graham_preprocessing(img_resized, fundus_mask=fundus_mask)
+        stages['ben_graham'] = img_graham.copy()
 
-        img = self.apply_clahe(img)
-        img = np.where(fundus_mask, img, 128).astype(np.uint8)
-        stages['ben_graham_clahe'] = img.copy()
+        img_clahe = self.apply_clahe(img_graham)
+        img_clahe = np.where(fundus_mask, img_clahe, 0).astype(np.uint8)
+        stages['ben_graham_clahe'] = img_clahe.copy()
 
         return stages

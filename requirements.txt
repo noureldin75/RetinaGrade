@@ -10,3 +10,6 @@ seaborn
 tqdm
 gradio
 albumentations
+timm
+opencv-python
+jupyter

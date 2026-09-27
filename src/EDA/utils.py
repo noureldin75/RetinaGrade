@@ -20,8 +20,8 @@ def load_data(df, image_dir):
 
     for _, row in df.iterrows():
         image_path = os.path.join(image_dir, row["id_code"] + ".png")
-        image = cv2.resize(np.array(Image.open(image_path)), (224, 224))  # Resize to 224x224
-        # image = np.array(Image.open(image_path))
+        # image = cv2.resize(np.array(Image.open(image_path)), (224, 224))  # Resize to 224x224
+        image = np.array(Image.open(image_path))
         
         x.append(image)
         y.append(row["diagnosis"])
@@ -30,7 +30,7 @@ def load_data(df, image_dir):
     y = np.array(y)
     return x,y
 
-def data_split(x, y, val_size=0.15, random_state=42):
+def data_split(x, y, val_size=0.15,test_size=0.15, random_state=42):
     """
     Split the dataset into training and validation sets.
 
@@ -43,4 +43,26 @@ def data_split(x, y, val_size=0.15, random_state=42):
     Returns:
     tuple: A tuple containing training and validation sets - (x_train, x_val, y_train, y_val).
     """
-    return train_test_split(x, y, test_size=val_size, random_state=random_state, shuffle=True)    
+
+    if test_size == 0.0:
+        # Create empty arrays for the test set to keep the return structure intact
+        x_test, y_test = np.array([]), np.array([])
+        
+        # Do a single split directly for train and validation
+        x_train, x_val, y_train, y_val = train_test_split(
+            x, y, 
+            test_size=val_size, 
+            random_state=random_state, 
+            shuffle=True, 
+            stratify=y
+        )
+    else:    
+
+        x_temp,x_test,y_temp,y_test=train_test_split(x,y,test_size=test_size,random_state=random_state,shuffle=True,stratify=y)
+
+        relative_val_size = val_size / (1 - test_size)
+
+        x_train, x_val, y_train, y_val = train_test_split(x_temp, y_temp,test_size=relative_val_size,random_state=random_state,shuffle=True,stratify=y_temp
+        )
+
+    return x_train, x_val, x_test, y_train, y_val, y_test
