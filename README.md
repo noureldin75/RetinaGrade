@@ -1,6 +1,6 @@
 # RetinaGrade: Optimizing Diabetic Retinopathy Detection
 
-**Authors:** Youssef Ashraf Mohamed (23010977) & Nour Eldeen Mohamed (23010920)
+
 
 RetinaGrade is a deep learning pipeline developed to automatically grade Diabetic Retinopathy (DR) severity from fundus imagery using the APTOS 2019 dataset. The project evolves from a frozen EfficientNet-B3 baseline into a highly optimized architecture utilizing aggressive data augmentation, Generalized Mean (GeM) pooling, and Conditional Ordinal Regression for Neural Networks (CORN) to account for the progressive nature of the disease.
 
@@ -106,10 +106,8 @@ Grad-CAM (Gradient-weighted Class Activation Mapping) is utilized to ensure the 
 Install everything at once with:
 
 ```bash
-pip install torch torchvision albumentations timm numpy pandas scikit-learn matplotlib seaborn opencv-python jupyter
+pip install -r requirements.txt
 ```
-
-> Tip: pin exact versions in a `requirements.txt` once your environment is finalized, then reinstall with `pip install -r requirements.txt` for reproducibility.
 
 ## Dataset Setup
 
@@ -119,7 +117,7 @@ pip install torch torchvision albumentations timm numpy pandas scikit-learn matp
 
 ## How to Run
 
-### Option A — Run the full pipeline via notebook (recommended)
+### Run the full pipeline via notebook
 
 ```bash
 # 1. Clone the repository
@@ -139,27 +137,7 @@ jupyter notebook nootbooks/model_training_and_eval.ipynb
 
 Run the notebook cells sequentially — it walks through preprocessing, augmentation, model building, training, and evaluation end to end.
 
-### Option B — Run individual pipeline stages from source
 
-```bash
-# Preprocess and validate raw images
-python -m src.preprocessing.preprocessor
-python -m src.preprocessing.quality_checker
-
-# Build the model (EfficientNet-B3 backbone + GeM pooling / CORN head)
-python -m src.models.model_builder
-
-# Train the model
-python -m src.training.trainer
-
-# Evaluate against the validation set (QWK, F1)
-python -m src.eval.evaluation
-
-# Generate Grad-CAM interpretability visualizations
-python -m src.variants.grad_cam
-```
-
-> Note: module paths above assume `src/` contains `__init__.py` files so it can be run with Python's `-m` flag. If it doesn't, run the scripts directly instead, e.g. `python src/training/trainer.py`, adjusting relative imports as needed.
 
 ### Configuring Training Runs
 
